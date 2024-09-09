@@ -83,12 +83,17 @@ void SerialPort::toggleConnection() {
         serialPort.setStopBits(QSerialPort::OneStop);
         serialPort.setFlowControl(QSerialPort::NoFlowControl);
 
+
+
+
         if (serialPort.open(QIODevice::ReadWrite)) {
             setConnectButtonStyle(true); // 设置为连接样式
             connectButton->setText("Disconnect"); // 更改按钮文本
             sendButton->setEnabled(true); // 启用发送按钮
            // QMessageBox::information(this, "Connection", "Connected to " + portName);
-            connect(&serialPort, &QSerialPort::readyRead, this, &SerialPort::readData); // 连接读数据信号
+           // connect(&serialPort, &QSerialPort::readyRead, this, &SerialPort::readData); // 连接读数据信号
+            receiveTextEdit->clear();
+
         }
         else {
             QMessageBox::warning(this, "Connection Error", "Failed to connect to " + portName);
@@ -96,12 +101,32 @@ void SerialPort::toggleConnection() {
     }
 }
 
-void SerialPort::sendData() {
+void SerialPort::sendData(char *data, int len) {
     if (serialPort.isOpen()) {
         QString text = sendTextEdit->toPlainText();
-        serialPort.write(text.toUtf8());
-        sendTextEdit->clear(); // 清空发送框
+        serialPort.write(data, len);
+        //sendTextEdit->clear(); // 清空发送框
+        //receiveTextEdit->append(data);
     }
+    else
+    {
+        receiveTextEdit->append("Please connect serial!!!");
+    }
+}
+
+bool SerialPort::isOpen(){
+
+    bool isOpen = serialPort.isOpen();
+
+    if (isOpen) {
+        receiveTextEdit->clear();
+    }
+    else
+    {
+        receiveTextEdit->append("Please connect serial!!!"+ isOpen);
+    }
+
+    return (isOpen);
 }
 
 void SerialPort::readData() {

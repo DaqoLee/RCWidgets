@@ -41,8 +41,15 @@ class Gauge : public QWidget
     Q_OBJECT
 
 public:
-    Gauge(QWidget* parent = nullptr);
+    Gauge(int _maxAngle, int _scale, int _maxValue, QWidget* parent = nullptr);
     ~Gauge();
+
+    int scale;
+   // int radius;
+    int maxValue;
+    int maxAngle;
+    int currentValue;//当前值
+    QString utext;
 private slots:
 
 
@@ -50,23 +57,19 @@ private:
 
     int startAngle;//起始角度
     double angle;
-    int currentValue;//当前值
-    int currentValue2;
+//    int currentValue;//当前值
+  //  int currentValue2;
     QTimer* timer;
     bool flag;//指针转动标志位
 
    // Ui::Gauge* ui;
 
     void initCanvas(QPainter& painter);
+    void drawScaleLine(QPainter& painter, int radius);
+    void drawScaleValue(QPainter& painter, int radius);
+    void drawPoint(QPainter& painter, int radius);
     void drawMiddleCircle(QPainter& painter, int radius);
-    // void drawScaleLine(QPainter& painter, int radius);
-    void drawScaleLine(QPainter& painter, int radius, int maxValue, int scale);
-    // void drawScaleValue(QPainter& painter, int radius);
-    void drawScaleValue(QPainter& painter, int radius, int maxValue, int scale);
-    //void drawPoint(QPainter& painter, int radius);
-    void drawPoint(QPainter& painter, int radius, int maxValue, float value);
-    //void drawSpeedSector(QPainter& painter, int radius);
-    void drawSpeedSector(QPainter& painter, int radius, int maxValue, int value);
+    void drawSpeedSector(QPainter& painter, int radius);
     void drawInnerEllipse(QPainter& painter, int radius);
     void drawInnerEllipseBlack(QPainter& painter, int radius);
     void drawCurrentSpeed(QPainter& painter);

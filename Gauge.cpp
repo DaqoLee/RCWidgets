@@ -2,14 +2,19 @@
 
 
 
-Gauge::Gauge(QWidget* parent) : QWidget(parent) {
+Gauge::Gauge(int _maxAngle, int _scale, int _maxValue, QWidget* parent) : QWidget(parent) {
 
 
    // ui->setupUi(this);
     setWindowFlags(Qt::FramelessWindowHint);
     startAngle = 150;
     currentValue = 0;
-    currentValue2 = 0;
+//    currentValue2 = 0;
+
+    this->maxValue = _maxValue;
+    this->scale = _scale;
+    this->maxAngle = _maxAngle;
+
     flag = true;
 
     timer = new QTimer(this);
@@ -61,10 +66,10 @@ void Gauge::drawMiddleCircle(QPainter& painter, int radius)
 /*
  * 画刻度
 */
-void Gauge::drawScaleLine(QPainter& painter, int radius, int maxValue, int scale)
+void Gauge::drawScaleLine(QPainter& painter, int radius)
 {
     //总计60个小刻度，每一个小刻度的角度值
-    angle = 240 * 1.0 / scale;
+    angle = maxAngle * 1.0 / scale;
 
     //float ang = 240 * 1.0 / scale;
     //保存当前坐标
@@ -78,7 +83,7 @@ void Gauge::drawScaleLine(QPainter& painter, int radius, int maxValue, int scale
         if (i >= (3 * scale / 4))
         {
             //第40个刻度后，绘制画笔修改成红色
-            painter.setPen(QPen(Qt::blue, 3));
+            painter.setPen(QPen(Qt::red, 3));
         }
         if (i % 5 == 0)
         {
@@ -104,7 +109,7 @@ void Gauge::drawScaleLine(QPainter& painter, int radius, int maxValue, int scale
 /*
  * 画刻度值
 */
-void Gauge::drawScaleValue(QPainter& painter, int radius, int maxValue, int scale)
+void Gauge::drawScaleValue(QPainter& painter, int radius)
 {
     //设置字体类型和大小
 
@@ -112,7 +117,7 @@ void Gauge::drawScaleValue(QPainter& painter, int radius, int maxValue, int scal
     QFont textFont("Arial", 12);
     //设置粗体
 
-    angle = 240 * 1.0 / scale;
+    angle = maxAngle * 1.0 / scale;
 
     // float ang = 240 * 1.0 / scale;
     textFont.setBold(true);
@@ -124,7 +129,7 @@ void Gauge::drawScaleValue(QPainter& painter, int radius, int maxValue, int scal
         {
             if (i >= 3 * scale / 4)
             {
-                painter.setPen(QPen(Qt::blue, 5));
+                painter.setPen(QPen(Qt::red, 5));
             }
             //保存当前坐标系
             painter.save();
@@ -146,7 +151,7 @@ void Gauge::drawScaleValue(QPainter& painter, int radius, int maxValue, int scal
 /*
  * 画指针
 */
-void Gauge::drawPoint(QPainter& painter, int radius, int maxValue, float value)
+void Gauge::drawPoint(QPainter& painter, int radius)
 {
     //保存当前坐标
     painter.save();
@@ -161,7 +166,7 @@ void Gauge::drawPoint(QPainter& painter, int radius, int maxValue, float value)
         QPointF(0, 15.0)
     };
     //坐标选旋转
-    painter.rotate(startAngle + value * (240.0 / maxValue));////value * (500.0/240))
+    painter.rotate(startAngle + currentValue * (240.0 / maxValue));////value * (500.0/240))
     //绘制多边形
     painter.drawPolygon(points, 4);
     //恢复坐标
@@ -171,16 +176,16 @@ void Gauge::drawPoint(QPainter& painter, int radius, int maxValue, float value)
 /*
  * 画扇形
 */
-void Gauge::drawSpeedSector(QPainter& painter, int radius, int maxValue, int value)
+void Gauge::drawSpeedSector(QPainter& painter, int radius)
 {
     //定义矩形区域
     QRect rentangle(-radius, -radius, radius * 2, radius * 2);
     //设置画笔无线条
     painter.setPen(Qt::NoPen);
     //设置画刷颜色
-    painter.setBrush(QColor(0, 0, 255, 80));
+    painter.setBrush(QColor(255, 0, 0, 80));
     //绘制扇形
-    painter.drawPie(rentangle, (360 - startAngle) * 16, -value * (240.0 / maxValue) * 16);
+    painter.drawPie(rentangle, (360 - startAngle) * 16, -currentValue * (240.0 / maxValue) * 16);
 }
 
 /*
@@ -190,9 +195,9 @@ void Gauge::drawInnerEllipse(QPainter& painter, int radius)
 {
     QRadialGradient radial(0, 0, radius);
     //中心颜色
-    radial.setColorAt(0.0, QColor(0, 0, 255, 200));
+    radial.setColorAt(0.0, QColor(255, 0, 0, 200));
     //外围颜色
-    radial.setColorAt(1.0, QColor(0, 0, 0, 100));
+    radial.setColorAt(1.0, QColor(30, 30, 30, 100));
     //设置画刷渐变色
     painter.setBrush(radial);
     //画圆形
@@ -205,7 +210,7 @@ void Gauge::drawInnerEllipse(QPainter& painter, int radius)
 void Gauge::drawInnerEllipseBlack(QPainter& painter, int radius)
 {
     //设置画刷
-    painter.setBrush(Qt::black);
+    painter.setBrush(QColor(30,30,30));
     //绘制圆形
     painter.drawEllipse(QPoint(0, 0), radius, radius);
 }
@@ -242,8 +247,8 @@ void Gauge::drawEllipseOutSkirts(QPainter& painter, int radius)
     painter.setPen(Qt::NoPen);
     //设置渐变色
     QRadialGradient radia(0, 0, radius);
-    radia.setColorAt(1, QColor(0, 0, 255, 200));
-    radia.setColorAt(0.97, QColor(0, 0, 255, 120));
+    radia.setColorAt(1, QColor(255, 0, 0, 200));
+    radia.setColorAt(0.97, QColor(255, 0, 0, 120));
     radia.setColorAt(0.9, QColor(0, 0, 0, 0));
     radia.setColorAt(0, QColor(0, 0, 0, 0));
     painter.setBrush(radia);
@@ -283,13 +288,13 @@ void Gauge::paintEvent(QPaintEvent* event)
     //2.画小圆
     drawMiddleCircle(painter, 30);
     //3.画刻度
-    drawScaleLine(painter, dashBoad_r, 240, 60);
+    drawScaleLine(painter, dashBoad_r);
     //4.画刻度值
-    drawScaleValue(painter, dashBoad_r, 240, 60);
+    drawScaleValue(painter, dashBoad_r);
     //5.画指针
-    drawPoint(painter, dashBoad_r, 240, currentValue);
+    drawPoint(painter, dashBoad_r);
     //6.画扇形
-    drawSpeedSector(painter, dashBoad_r + 25, 240, currentValue);
+    drawSpeedSector(painter, dashBoad_r + 25);
     //7.画渐变内圆
     drawInnerEllipse(painter, 110 / 2);
     //8.画黑色内圈
@@ -306,7 +311,7 @@ void Gauge::paintEvent(QPaintEvent* event)
     QFont font_u("Arial", 16);
     font_u.setBold(true);
     painter.setFont(font_u);
-    painter.drawText(QRect(-60, -60, 120, 320), Qt::AlignCenter, "km/h");
+    painter.drawText(QRect(-60, -60, 120, 320), Qt::AlignCenter, utext);
     //10.画外壳，发光外圈
     drawEllipseOutSkirts(painter, dashBoad_r + 25);
 

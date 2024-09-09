@@ -33,6 +33,22 @@
 #include <QJsonObject>
 #include< combaseapi.h>
 
+#include <mozaAPI.h>
+
+#include "SerialPort.h"
+
+#include "RCMap.h"
+#include <QtWidgets/QApplication>
+
+#include <QVBoxLayout>
+#include <QNetworkInterface>
+#include <QHostAddress>
+
+#include"Gauge.h"
+#include "ButtonBar.h"
+
+
+
 class RCWidgets : public QMainWindow
 {
     Q_OBJECT
@@ -45,10 +61,23 @@ private slots:
    // void processPendingDatagrams();
     void processPendingDatagramsUWB();
 private:
+
+
+
+
     Ui::RCWidgetsClass ui;
     QUdpSocket* udpSocketUWB;
     QString getLocalIP();
     QLabel *IPLabel;
+    QTimer* timer;
+
+    SerialPort* Serial;
+    Gauge* SpeeedGauge;
+    Gauge* ChinalGauge;
+    RCMap* Map;
+    ButtonBar* Button;
+
 
     void parseJsonData(const QString& jsonString);
+    void paintEvent(QPaintEvent* event);
 };

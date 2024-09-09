@@ -57,17 +57,25 @@ void RCMap::paintEvent(QPaintEvent* event){
     if (!background.isNull()) {
         painter.drawPixmap(backgroundX, backgroundY, background.scaled(size(), Qt::KeepAspectRatio));
     }
+    
+    //QLinearGradient gradient(50, 50, 50, 0);
+    //gradient.setColorAt(0.1, QColor(30, 30, 30, 0)); // 右边缘完全透明
+    //gradient.setColorAt(0.6, QColor(30, 30, 30, 255)); // 80% 位置完全不透明
+    ////gradient.setColorAt(0.8, QColor(0, 0, 0, 255)); // 左边缘完全不透明
 
-        QLinearGradient gradient(50, 0, 0, 0);
-    gradient.setColorAt(0.1, QColor(30, 30, 30, 0)); // 右边缘完全透明
-    gradient.setColorAt(0.6, QColor(30, 30, 30, 255)); // 80% 位置完全不透明
-    //gradient.setColorAt(0.8, QColor(0, 0, 0, 255)); // 左边缘完全不透明
+    //// 绘制渐变遮罩
+    //painter.setBrush(QBrush(gradient));
+    //painter.setPen(Qt::NoPen);
+    //painter.drawRect(rect());
+    //painter.setRenderHint(QPainter::Antialiasing);
 
-    // 绘制渐变遮罩
-    painter.setBrush(QBrush(gradient));
-    painter.setPen(Qt::NoPen);
-    painter.drawRect(rect());
-    painter.setRenderHint(QPainter::Antialiasing);
+    //QRadialGradient gradient(width() / 10, height() / 10, width() / 10);
+    //gradient.setColorAt(0, Qt::transparent); // 中心透明
+    //gradient.setColorAt(1, QColor(30, 30, 30)); // 边缘黑色（可以调整颜色）
+
+    //// 设置渐变为绘制的画刷
+    //painter.setBrush(gradient);
+    //painter.drawRect(0, 0, width(), height()); // 覆盖整个区域
 
 
 

@@ -24,13 +24,15 @@ public:
 
     SerialPort(QWidget* parent = nullptr);
     ~SerialPort();
+    void sendData(char* data, int len);
+    bool isOpen();
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
 
 private slots:
     void toggleConnection();
-    void sendData();
+   
     void readData();
     void refreshPorts();
     void setConnectButtonStyle(bool connected);

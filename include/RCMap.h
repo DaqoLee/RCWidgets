@@ -33,6 +33,18 @@ public:
     RCMap(QWidget* parent = nullptr);
     ~RCMap();
 
+    typedef struct
+    {
+        QPixmap movingImage;
+        QColor borderColor;
+        int imageX;
+        int imageY;
+    }Tag_t;
+
+
+    Tag_t Tag[5];
+
+
 protected:
    // bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -47,16 +59,7 @@ private:
 
     QPixmap background;
 
-    typedef struct
-    {
-        QPixmap movingImage;
-        QColor borderColor;
-        int imageX;
-        int imageY;
-    }Tag_t;
 
-
-    Tag_t Tag[5];
 
     int radius;
 

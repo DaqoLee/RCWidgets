@@ -35,6 +35,10 @@ private slots:
 
 private:
     QComboBox* portSelector;
+
+
+    QPushButton* sendButton[6];
+
     QPushButton* connectButton;
 
     QPushButton* sendButton1;
