@@ -22,7 +22,7 @@ find_package(Qt${QT_VERSION_MAJOR}
 )
 qt_standard_project_setup()
 
-set(RS21_sdk "C:/Users/26621/Desktop/RC/RCWidgets")
+#set(RS21_sdk "C:/Users/26621/Desktop/RC/RCWidgets")
 
 
 set(PROJECT_SOURCES
@@ -51,7 +51,7 @@ qt_add_executable(RCWidgets ${PROJECT_SOURCES})
 target_include_directories(RCWidgets
     PUBLIC
      Qt${QT_VERSION_MAJOR}::Test
-    ${RS21_sdk}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 
@@ -68,7 +68,7 @@ target_link_libraries(RCWidgets
         Qt::Widgets
         Qt6::Network
         Qt6::SerialPort
-        ${RS21_sdk}/lib/MOZA_SDK.lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/MOZA_SDK.lib
 )
 
 add_test(
