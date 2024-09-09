@@ -22,7 +22,7 @@ find_package(Qt${QT_VERSION_MAJOR}
 )
 qt_standard_project_setup()
 
-set(RS21_sdk "C:/Users/DaqoLee/Desktop/RC/RCWidgets")
+set(RS21_sdk "C:/Users/26621/Desktop/RC/RCWidgets")
 
 
 set(PROJECT_SOURCES
@@ -31,7 +31,14 @@ set(PROJECT_SOURCES
     RCWidgets.h
     RCWidgets.cpp
     RCMap.cpp
+    RCMap.h
     Gauge.cpp
+    Gauge.h
+    SerialPort.cpp
+    SerialPort.h
+    ButtonBar.cpp
+    ButtonBar.h
+
 )
 
 
