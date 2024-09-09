@@ -109,7 +109,7 @@ IMU_t IMU;
 RCWidgets::RCWidgets(QWidget *parent)
     : QMainWindow(parent)
 {
-    //setWindowFlags(Qt::FramelessWindowHint);
+    setWindowFlags(Qt::FramelessWindowHint);
 
     ui.setupUi(this);
 
@@ -146,7 +146,7 @@ RCWidgets::RCWidgets(QWidget *parent)
 
 
     udpSocketUWB = new QUdpSocket(this);
-    udpSocketUWB->bind(QHostAddress("192.168.31.70"), 12345); // 绑定到任意地址和端口12345
+    udpSocketUWB->bind(QHostAddress("192.168.57.13"), 12345); // 绑定到任意地址和端口12345
     connect(udpSocketUWB, &QUdpSocket::readyRead, this, &RCWidgets::processPendingDatagramsUWB);
     timer = new QTimer(this);
 
@@ -244,6 +244,20 @@ RCWidgets::~RCWidgets(){
 
 }
 
+
+void RCWidgets::mousePressEvent(QMouseEvent* event)
+{
+    this->windowPos = this->pos();       // 获得部件当前位置
+    this->mousePos = event->globalPos(); // 获得鼠标位置
+    this->dPos = mousePos - windowPos;   // 移动后部件所在的位置
+}
+
+void RCWidgets::mouseMoveEvent(QMouseEvent* event)
+{
+    this->move(event->globalPos() - this->dPos);
+}
+
+
 QString RCWidgets::getLocalIP() {
     QString ipAddress;
 
@@ -335,7 +349,7 @@ void RCWidgets::processPendingDatagramsUWB() {
 
         if (datagram.size() == 22)
         {
-         //   udpSocketUWB->readDatagram((char*)IMU.imuData, 20, &sender, &senderPort);
+            udpSocketUWB->readDatagram((char*)IMU.imuData, 20, &sender, &senderPort);
         }
         else
         {

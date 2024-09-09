@@ -4,7 +4,7 @@
 #include "ui_RCWidgets.h"
 #include <QLabel>
 
-
+#include<QPoint.h>
 #include <QWidget>
 
 #include <QPainter>
@@ -48,6 +48,12 @@
 #include "ButtonBar.h"
 
 
+#include <QtCore/QVariant>
+#include <QtWidgets>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QHeaderView>
+#include <QtWidgets/QWidget>
 
 class RCWidgets : public QMainWindow
 {
@@ -78,6 +84,16 @@ private:
     ButtonBar* Button;
 
 
+    
+    QPoint windowPos;
+    QPoint mousePos;
+    QPoint dPos;
+
+
+
     void parseJsonData(const QString& jsonString);
     void paintEvent(QPaintEvent* event);
+
+    void mousePressEvent(QMouseEvent* event);
+    void mouseMoveEvent(QMouseEvent* event);
 };
