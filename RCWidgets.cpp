@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-#define MAX_ANGLE 180
+#define MAX_ANGLE 720
 #define MAX_BRAKE 32768
 
 
@@ -109,7 +109,7 @@ IMU_t IMU;
 RCWidgets::RCWidgets(QWidget *parent)
     : QMainWindow(parent)
 {
-    setWindowFlags(Qt::FramelessWindowHint);
+    //setWindowFlags(Qt::FramelessWindowHint);
 
     ui.setupUi(this);
 
@@ -131,27 +131,80 @@ RCWidgets::RCWidgets(QWidget *parent)
     ChinalGauge->setGeometry(0, 480, 480, 480);
 
     Button = new ButtonBar(this);
-    Button->setGeometry(0, 1400, 480, 300);
+    Button->setGeometry(0, 1300, 480, 300);
 
     Map = new RCMap(this);
-    Map->setGeometry(480, 0, 600, 1960);
+    Map->setGeometry(480, 0, 600, 1920);
 
    
+    Serial = new SerialPort(this);
+    Serial->setGeometry(0, 1650, 240, 240);
   
     moza::installMozaSDK();
     Sleep(5000);
+
+ 
+
+    angleSelector = new QComboBox(this);
+    angleSelector->setGeometry(260, 1685, 100, 40);
+    
+    angleSelector->addItem(QString::number(90));
+    angleSelector->addItem(QString::number(180));
+    angleSelector->addItem(QString::number(360));
+    angleSelector->addItem(QString::number(720));
+   
+
+    angleSelector->setCurrentText(QString::number(MAX_ANGLE));
+
+
     ERRORCODE err = NORMAL;
-    err = moza::setMotorLimitAngle(MAX_ANGLE, MAX_ANGLE);
+    err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());
+
+    if (err)
+    {
+        Serial->receiveTextEdit->append("setMotorLimitAngle " + angleSelector->currentText() + " err:" + QString::number(err));
+    }
+    else
+    {
+        Serial->receiveTextEdit->append("setMotorLimitAngle " + angleSelector->currentText());
+    }
+   
 
 
+    QObject::connect(angleSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        [&](int index) {
+
+            ERRORCODE err = NORMAL;
+            err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());
+            if (err)
+            {
+                Serial->receiveTextEdit->append("setMotorLimitAngle " + angleSelector->currentText() + " err:" + QString::number(err));
+            }
+            else
+            {
+                Serial->receiveTextEdit->append("setMotorLimitAngle " + angleSelector->currentText());
+            }
+
+        });
+
+
+   // setButton = new QPushButton("OK", this);
+   // setButton->setGeometry(370, 1775, 100, 40);
+   //// setButton->setStyleSheet("background-color: green; color: white;");
+
+   // connect(setButton, &QPushButton::clicked, [=]() {
+   //     
+   //     
+   //     ERRORCODE err = NORMAL;
+   //     err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());
+   //    //QString::number(angleSelector->currentText())
+   //     
+   //     });
 
     udpSocketUWB = new QUdpSocket(this);
-    udpSocketUWB->bind(QHostAddress("192.168.57.13"), 12345); // 绑定到任意地址和端口12345
+    udpSocketUWB->bind(QHostAddress("192.168.50.30"), 12345); // 绑定到任意地址和端口12345
     connect(udpSocketUWB, &QUdpSocket::readyRead, this, &RCWidgets::processPendingDatagramsUWB);
     timer = new QTimer(this);
-
-    Serial = new SerialPort(this);
-    Serial->setGeometry(0, 1740, 240, 240);
 
 
     //IPLabel = new QLabel(this);
@@ -159,12 +212,6 @@ RCWidgets::RCWidgets(QWidget *parent)
     //IPLabel->setText(getLocalIP());
     //IPLabel->setGeometry(0, 0, 400, 100);
     //IPLabel->setStyleSheet("background-color: green;");
-
-
-    //while (Serial->isOpen())
-    //{
-    //    Sleep(100);
-    //}
 
 
 
@@ -204,9 +251,9 @@ RCWidgets::RCWidgets(QWidget *parent)
 
             //std::cout << SGP_Gear << std::endl;
             //printf("SGP_Gear:%d \r\n", SGP_Gear + 1);
-            if (d->fSteeringWheelAngle >= -(MAX_ANGLE / 2) && d->fSteeringWheelAngle <= (MAX_ANGLE / 2))
+            if (d->fSteeringWheelAngle >= -(angleSelector->currentText().toInt() / 2) && d->fSteeringWheelAngle <= (angleSelector->currentText().toInt() / 2))
             {
-                mazaData.fSteeringWheelAngle = d->fSteeringWheelAngle * 500 / (MAX_ANGLE / 2);
+                mazaData.fSteeringWheelAngle = d->fSteeringWheelAngle * 500 / (angleSelector->currentText().toInt() / 2);
             }
 
             mazaData.brake = (d->brake + MAX_BRAKE) * 500 / (2 * MAX_BRAKE);
@@ -230,6 +277,11 @@ RCWidgets::RCWidgets(QWidget *parent)
             }
 
         }
+        else
+        {
+            Serial->receiveTextEdit->append("getHIDData err" + QString::number(err));
+        }
+
         SpeeedGauge->currentValue = abs(IMU.speed / 100);
 
         update();
@@ -312,8 +364,8 @@ void RCWidgets::parseJsonData(const QString& jsonString) {
    
     int ID = jsonObj.value("TagID").toInt();
 
-    Map->Tag[tagID[ID]].imageX = jsonObj.value("X").toDouble() * 30;
-    Map->Tag[tagID[ID]].imageY = jsonObj.value("Y").toDouble() * 40;
+    Map->Tag[tagID[ID]].imageX = 600 +(jsonObj.value("X").toDouble() * (  33));
+    Map->Tag[tagID[ID]].imageY = 1960- (jsonObj.value("Y").toDouble() * 32);
  //   Map->Tag[tagID[ID]].imageZ = jsonObj.value("Z").toDouble();
 
     //UWB[tagID].x = jsonObj.value("X").toDouble();

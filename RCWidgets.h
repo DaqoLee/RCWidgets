@@ -83,7 +83,8 @@ private:
     RCMap* Map;
     ButtonBar* Button;
 
-
+    QComboBox* angleSelector;
+    QPushButton* setButton;
     
     QPoint windowPos;
     QPoint mousePos;
