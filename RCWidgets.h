@@ -66,6 +66,11 @@ private slots:
 
    // void processPendingDatagrams();
     void processPendingDatagramsUWB();
+
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+    void moveEvent(QMoveEvent* event) override;
+
 private:
 
 
@@ -91,6 +96,8 @@ private:
     QPoint dPos;
 
 
+    void loadSettings();
+    void saveSettings();
 
     void parseJsonData(const QString& jsonString);
     void paintEvent(QPaintEvent* event);

@@ -110,7 +110,7 @@ RCWidgets::RCWidgets(QWidget *parent)
     : QMainWindow(parent)
 {
     //setWindowFlags(Qt::FramelessWindowHint);
-
+    loadSettings();
     ui.setupUi(this);
 
     //this->setStyleSheet(
@@ -293,9 +293,37 @@ RCWidgets::RCWidgets(QWidget *parent)
 }
 
 RCWidgets::~RCWidgets(){
-
+    saveSettings();
 }
 
+
+void RCWidgets::loadSettings() {
+    QSettings settings("MyCompany", "MyApp");
+
+    // 恢复窗口大小和位置
+    resize(settings.value("windowSize", QSize(800, 600)).toSize());
+    move(settings.value("windowPos", QPoint(100, 100)).toPoint());
+}
+
+void RCWidgets::saveSettings() {
+    QSettings settings("MyCompany", "MyApp");
+
+    // 保存窗口大小和位置
+    settings.setValue("windowSize", size());
+    settings.setValue("windowPos", pos());
+}
+
+// 重写 resizeEvent 以保存窗口大小
+void RCWidgets::resizeEvent(QResizeEvent* event)  {
+    QMainWindow::resizeEvent(event);
+    saveSettings(); // 自动保存大小
+}
+
+// 重写 moveEvent 以保存窗口位置
+void RCWidgets::moveEvent(QMoveEvent* event)  {
+    QMainWindow::moveEvent(event);
+    saveSettings(); // 自动保存位置
+}
 
 void RCWidgets::mousePressEvent(QMouseEvent* event)
 {
