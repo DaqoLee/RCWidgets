@@ -55,6 +55,25 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QWidget>
 
+
+
+
+#include <iostream>
+#include <QtWidgets/QApplication>
+
+#include <QApplication>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QNetworkInterface>
+#include <QHostAddress>
+#include< combaseapi.h>
+
+
+#include <QNetworkAddressEntry>
+#include <QAbstractSocket>
+
+
 class RCWidgets : public QMainWindow
 {
     Q_OBJECT
@@ -62,6 +81,7 @@ class RCWidgets : public QMainWindow
 public:
     RCWidgets(QWidget *parent = nullptr);
     ~RCWidgets();
+     QString getLocalIP() ;
 private slots:
 
    // void processPendingDatagrams();
@@ -78,7 +98,6 @@ private:
 
     Ui::RCWidgetsClass ui;
     QUdpSocket* udpSocketUWB;
-    QString getLocalIP();
     QLabel *IPLabel;
     QTimer* timer;
 
@@ -95,6 +114,10 @@ private:
     QPoint mousePos;
     QPoint dPos;
 
+    QTextEdit* debugTextEdit;
+
+    float maxUWBX;
+    float maxUWBY;
 
     void loadSettings();
     void saveSettings();
