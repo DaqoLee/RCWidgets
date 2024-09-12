@@ -105,15 +105,11 @@ IMU_t IMU;
 
 
 
-
-
-
-
 RCWidgets::RCWidgets(QWidget *parent)
     : QMainWindow(parent)
 {
     setWindowFlags(Qt::FramelessWindowHint);
-    loadSettings();
+   // loadSettings();
     ui.setupUi(this);
 
     //this->setStyleSheet(
@@ -122,6 +118,70 @@ RCWidgets::RCWidgets(QWidget *parent)
   
     maxUWBX = 17.8;
     maxUWBY = 61;
+
+    debugTextEdit = new QTextEdit(this);
+    debugTextEdit->setReadOnly(true);
+    debugTextEdit->setGeometry(240, 1755, 230, 100);
+
+
+    QString myIPAdress = getLocalIP();
+    debugTextEdit->append(myIPAdress + ":12345");
+
+    QStringList ipParts = myIPAdress.split('.');
+    int lastNumbe = 0;
+
+    // 检查分割结果是否有效
+    if (ipParts.size() == 4) { // 确保是一个有效的 IPv4 地址
+        // 获取最后一部分并转换为数字
+        bool ok;
+        int lastNumber = ipParts.last().toInt(&ok); // toInt 方法可以返回一个布尔值表示转换是否成功
+
+        if (ok) { // 如果转换成功
+
+            debugTextEdit->append( "IP lastNumber:" + QString::number(lastNumber));
+        }
+        else {
+            debugTextEdit->append("err");
+        }
+    }
+    else {
+        debugTextEdit->append("NO IPAdress！");
+    }
+
+    QString sPort;
+    int maxAngle;
+
+    switch (lastNumbe)
+    {
+    case 30:
+
+        sPort = "COM11";
+        maxAngle = 720;
+
+        break;
+
+    case 70:
+        sPort = "COM15";
+        maxAngle = 360;
+        break;
+    case 75:
+
+        sPort = "COM15";
+        maxAngle = 360;
+
+        break;
+    case 208:
+        sPort = "COM19";
+        maxAngle = 180;
+
+        break;
+
+    default:
+
+        sPort = "COM11";
+        maxAngle = 360;
+        break;
+    }
 
     SpeeedGauge = new Gauge(240, 60, 120, this);
     SpeeedGauge->setGeometry(0, 0, 480, 480);
@@ -141,15 +201,14 @@ RCWidgets::RCWidgets(QWidget *parent)
     Map->setGeometry(480, 0, 600, 1920);
 
    
-    Serial = new SerialPort(this);
+    Serial = new SerialPort(this, sPort);
     Serial->setGeometry(0, 1650, 240, 240);
   
     moza::installMozaSDK();
     Sleep(5000);
 
-    debugTextEdit = new QTextEdit(this);
-    debugTextEdit->setReadOnly(true);
-    debugTextEdit->setGeometry(240, 1755, 230, 100);
+
+    //debugTextEdit->setStyleSheet("background-color: green; color: white;");
 
     angleSelector = new QComboBox(this);
     angleSelector->setGeometry(370, 1685, 100, 40);
@@ -160,14 +219,10 @@ RCWidgets::RCWidgets(QWidget *parent)
     angleSelector->addItem(QString::number(720));
    
 
-    angleSelector->setCurrentText(QString::number(MAX_ANGLE));
+    angleSelector->setCurrentText(QString::number(maxAngle));
 
     setButton = new QPushButton("Steering Angle", this);
     setButton->setGeometry(240, 1685, 120, 40);
-
-
-    QString myIPAdress = getLocalIP();
-    debugTextEdit->append(myIPAdress+":12345");
 
 
     udpSocketUWB = new QUdpSocket(this);
@@ -176,6 +231,12 @@ RCWidgets::RCWidgets(QWidget *parent)
     timer = new QTimer(this);
 
 
+    //QSpinBox* spinBox = new QSpinBox(this);
+
+    //spinBox->setRange(0, 100); // 设置范围
+    //spinBox->setValue(50); // 设置初始值
+
+    //spinBox->setGeometry(240, 1585, 120, 40);
 
     ERRORCODE err = NORMAL;
     err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());

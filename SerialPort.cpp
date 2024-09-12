@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 
 
-SerialPort::SerialPort(QWidget* parent ) : QWidget(parent) {
+SerialPort::SerialPort(QWidget* parent ,QString _port) : QWidget(parent) {
     setWindowTitle("Serial Port Manager");
 
  
@@ -11,7 +11,7 @@ SerialPort::SerialPort(QWidget* parent ) : QWidget(parent) {
     portSelector = new QComboBox();
     portSelector->setFixedSize(100, 40);
     refreshPorts(); // 初始化时刷新端口列表
-    portSelector->setCurrentText("COM11");
+    portSelector->setCurrentText("_port");
     //portSelector->addItem("COM12");
     // 创建连接/断开按钮
     connectButton = new QPushButton("Connect");

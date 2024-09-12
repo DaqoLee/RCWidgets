@@ -22,7 +22,7 @@ class SerialPort : public QWidget {
 
 public:
 
-    SerialPort(QWidget* parent = nullptr);
+    SerialPort(QWidget* parent = nullptr, QString _port = "COM11");
     ~SerialPort();
     void sendData(char* data, int len);
     bool isOpen();
@@ -46,6 +46,8 @@ private:
     QTextEdit* sendTextEdit;
    
     QSerialPort serialPort;
+
+    QString myPort;
 };
 
 
