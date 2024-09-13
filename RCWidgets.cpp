@@ -16,90 +16,10 @@ uint8_t butNum[29] = { 19,20,8,7,6,5,22,23,21,34,33,32,24,37,25,38,36,3,1,2,4,35
 
 uint8_t tagID[6] = { 0, 1, 2 , 4 , 3, 5};
 
-typedef struct
-{
-    union
-    {
-        uint8_t Data[16];
-        struct
-        {
-            float fSteeringWheelAngle;
-            int brake;
-            int throttle;
-            union
-            {
-                uint32_t buttons;
-                struct
-                {
-                    uint32_t N : 1;
-                    uint32_t WIP : 1;
-                    uint32_t L : 1;
-                    uint32_t D : 1;
-                    uint32_t Ri : 1;
-                    uint32_t U : 1;
-                    uint32_t CAM : 1;
-                    uint32_t RADIO : 1;
-                    uint32_t FL : 1;
-                    uint32_t PL : 1;
-                    uint32_t BOX : 1;
-                    uint32_t P : 1;
-                    uint32_t S1 : 1;
-                    uint32_t S2 : 1;
-                    uint32_t HOME : 1;
-                    uint32_t MENU : 1;
-                    uint32_t START : 1;
-                    uint32_t X : 1;
-                    uint32_t A : 1;
-                    uint32_t B : 1;
-                    uint32_t Y : 1;
-                    uint32_t R : 1;
-                    uint32_t LG : 1;
-                    uint32_t RG : 1;
-                    uint32_t SGP_F : 1;
-                    uint32_t SGP_B : 1;
-                    uint32_t SGP_S1 : 1;
-                    uint32_t SGP_S2 : 1;
-                    uint32_t SGP_S3 : 1;
-
-                    uint32_t Other : 3;
-                    /* data */
-                };
-
-            };
-        };
-
-    };
-}MOZA_t;
-
-MOZA_t mazaData;
 
 
 
-typedef struct
-{
-    union
-    {
-        uint8_t imuData[20];
-        struct
-        {
-
-            // float AccelX;
-            // float AccelY;
-            float AccelZ;
-
-            // float GyroX;
-            // float GyroY;
-            float GyroZ;
-
-            float roll;
-            float pitch;
-            //  float yaw;
-
-            float speed;
-        };
-
-    };
-}IMU_t;
+MOZA_t mozaData;
 
 IMU_t IMU;
 
@@ -108,8 +28,8 @@ IMU_t IMU;
 RCWidgets::RCWidgets(QWidget *parent)
     : QMainWindow(parent)
 {
-    setWindowFlags(Qt::FramelessWindowHint);
-   // loadSettings();
+    //setWindowFlags(Qt::FramelessWindowHint);
+    loadSettings();
     ui.setupUi(this);
 
     //this->setStyleSheet(
@@ -128,13 +48,13 @@ RCWidgets::RCWidgets(QWidget *parent)
     debugTextEdit->append(myIPAdress + ":12345");
 
     QStringList ipParts = myIPAdress.split('.');
-    int lastNumbe = 0;
+    int lastNumber = 0;
 
     // 检查分割结果是否有效
     if (ipParts.size() == 4) { // 确保是一个有效的 IPv4 地址
         // 获取最后一部分并转换为数字
         bool ok;
-        int lastNumber = ipParts.last().toInt(&ok); // toInt 方法可以返回一个布尔值表示转换是否成功
+        lastNumber = ipParts.last().toInt(&ok); // toInt 方法可以返回一个布尔值表示转换是否成功
 
         if (ok) { // 如果转换成功
 
@@ -151,7 +71,7 @@ RCWidgets::RCWidgets(QWidget *parent)
     QString sPort;
     int maxAngle;
 
-    switch (lastNumbe)
+    switch (lastNumber)
     {
     case 30:
 
@@ -172,6 +92,12 @@ RCWidgets::RCWidgets(QWidget *parent)
         break;
     case 208:
         sPort = "COM19";
+        maxAngle = 180;
+
+        break;
+
+    case 13:
+        sPort = "COM4";
         maxAngle = 180;
 
         break;
@@ -228,6 +154,7 @@ RCWidgets::RCWidgets(QWidget *parent)
     udpSocketUWB = new QUdpSocket(this);
     udpSocketUWB->bind(QHostAddress(myIPAdress), 12345); // 绑定到任意地址和端口12345  //192.168.50.30
     connect(udpSocketUWB, &QUdpSocket::readyRead, this, &RCWidgets::processPendingDatagramsUWB);
+
     timer = new QTimer(this);
 
 
@@ -307,30 +234,31 @@ RCWidgets::RCWidgets(QWidget *parent)
 
 
         ERRORCODE err = NORMAL;
+#if 0
         const HIDData* d = moza::getHIDData(err);
         if (d) {
 
-            // mazaData.buttons = 0;
+            // mozaData.buttons = 0;
 
-            for (int i = 28; i >= 0; i--)
+            for (int i = 28; i >= 4; i--)
             {
 
-                 mazaData.buttons |= (d->buttons[butNum[i]].isPressed() << (i));
+                 mozaData.buttons |= (d->buttons[butNum[i]].isPressed() << (i));
                  //std::cout << i << ":" << d->buttons[i].isPressed() << " ";
             }
 
-            if (mazaData.SGP_B != Last_SGP_B)
+            if (mozaData.SGP_B != Last_SGP_B)
             {
-                if (mazaData.SGP_B == 1)
+                if (mozaData.SGP_B == 1)
                 {
                     SGP_Gear = SGP_Gear >= 4 ? 4 : SGP_Gear + 1;
                 }
 
             }
 
-            if (mazaData.SGP_F != Last_SGP_F)
+            if (mozaData.SGP_F != Last_SGP_F)
             {
-                if (mazaData.SGP_F == 1)
+                if (mozaData.SGP_F == 1)
                 {
                     SGP_Gear = SGP_Gear <= 0 ? 0 : SGP_Gear - 1;
                 }
@@ -341,14 +269,14 @@ RCWidgets::RCWidgets(QWidget *parent)
             //printf("SGP_Gear:%d \r\n", SGP_Gear + 1);
             if (d->fSteeringWheelAngle >= -(angleSelector->currentText().toInt() / 2) && d->fSteeringWheelAngle <= (angleSelector->currentText().toInt() / 2))
             {
-                mazaData.fSteeringWheelAngle = d->fSteeringWheelAngle * 500 / (angleSelector->currentText().toInt() / 2);
+                mozaData.fSteeringWheelAngle = d->fSteeringWheelAngle * 500 / (angleSelector->currentText().toInt() / 2);
             }
 
-            mazaData.brake = (d->brake + MAX_BRAKE) * 500 / (2 * MAX_BRAKE);
-            mazaData.throttle = (d->throttle + MAX_BRAKE) * 50 * gear[SGP_Gear] / (2 * MAX_BRAKE);
+            mozaData.brake = (d->brake + MAX_BRAKE) * 500 / (2 * MAX_BRAKE);
+            mozaData.throttle = (d->throttle + MAX_BRAKE) * 50 * gear[SGP_Gear] / (2 * MAX_BRAKE);
 
-            Last_SGP_F = mazaData.SGP_F;
-            Last_SGP_B = mazaData.SGP_B;
+            Last_SGP_F = mozaData.SGP_F;
+            Last_SGP_B = mozaData.SGP_B;
 
             ChinalGauge->utext = QString::number(SGP_Gear + 1);
 
@@ -377,9 +305,9 @@ RCWidgets::RCWidgets(QWidget *parent)
                 //SpeeedGauge->currentValue = abs(((int)IMU.speed / 100)%60);
             }
 
-            if (mazaData.brake > 20)
+            if (mozaData.brake > 20)
             {
-                ChinalGauge->currentValue = mazaData.brake;
+                ChinalGauge->currentValue = mozaData.brake;
             }
             else
             {
@@ -387,13 +315,15 @@ RCWidgets::RCWidgets(QWidget *parent)
 
             }
 
-            Serial->sendData((char*)mazaData.Data, 16);
+            Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
 
         }
         else
         {
             debugTextEdit->append("getHIDData err" + QString::number(err));
         }
+#endif
+        Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
 
         update();
 
@@ -477,14 +407,14 @@ void RCWidgets::moveEvent(QMoveEvent* event)  {
 
 void RCWidgets::mousePressEvent(QMouseEvent* event)
 {
-    this->windowPos = this->pos();       // 获得部件当前位置
-    this->mousePos = event->globalPos(); // 获得鼠标位置
-    this->dPos = mousePos - windowPos;   // 移动后部件所在的位置
+    //this->windowPos = this->pos();       // 获得部件当前位置
+    //this->mousePos = event->globalPos(); // 获得鼠标位置
+    //this->dPos = mousePos - windowPos;   // 移动后部件所在的位置
 }
 
 void RCWidgets::mouseMoveEvent(QMouseEvent* event)
 {
-    this->move(event->globalPos() - this->dPos);
+  //  this->move(event->globalPos() - this->dPos);
 }
 
 

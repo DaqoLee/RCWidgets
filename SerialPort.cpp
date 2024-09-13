@@ -11,7 +11,7 @@ SerialPort::SerialPort(QWidget* parent ,QString _port) : QWidget(parent) {
     portSelector = new QComboBox();
     portSelector->setFixedSize(100, 40);
     refreshPorts(); // 初始化时刷新端口列表
-    portSelector->setCurrentText("_port");
+    portSelector->setCurrentText(_port);
     //portSelector->addItem("COM12");
     // 创建连接/断开按钮
     connectButton = new QPushButton("Connect");

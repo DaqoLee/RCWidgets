@@ -1,6 +1,8 @@
 #include "ButtonBar.h"
 
 #include <QVBoxLayout>
+#include "RCWidgets.h"
+
 
 
 ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
@@ -48,10 +50,12 @@ ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
         if (isClicked) {
             sendButton[0]->setStyleSheet("background-color: green; color: white;");
             sendButton[0]->setText("1000"); // 更改按钮文本
+            mozaData.N = 1;
         }
         else {
             sendButton[0]->setStyleSheet("background-color: gray; color: white;");
             sendButton[0]->setText("0"); // 更改按钮文本
+            mozaData.N = 0;
         }
         isClicked = !isClicked;
 
@@ -65,10 +69,13 @@ ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
         if (isClicked) {
             sendButton[1]->setStyleSheet("background-color: green; color: white;");
             sendButton[1]->setText("1000"); // 更改按钮文本
+            mozaData.WIP = 1;
+            
         }
         else {
             sendButton[1]->setStyleSheet("background-color: gray; color: white;");
             sendButton[1]->setText("0"); // 更改按钮文本
+            mozaData.WIP = 0;
         }
         isClicked = !isClicked;
 
@@ -82,10 +89,12 @@ ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
         if (isClicked) {
             sendButton[2]->setStyleSheet("background-color: green; color: white;");
             sendButton[2]->setText("1000"); // 更改按钮文本
+            mozaData.L = 1;
         }
         else {
             sendButton[2]->setStyleSheet("background-color: gray; color: white;");
             sendButton[2]->setText("0"); // 更改按钮文本
+            mozaData.L = 0;
         }
         isClicked = !isClicked;
 
@@ -172,45 +181,50 @@ ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
 
 
         // 创建 QLabel 用于显示滑条的值
-    label = new QLabel("50");
-    label->setFixedWidth(20);
+    label = new QLabel("0");
+    label->setFixedWidth(30);
 
     slider = new QSlider(Qt::Horizontal); // 创建水平滑条
 
-    slider->setRange(0, 100); // 设置范围
-    slider->setValue(50);     // 设置初始值
+    slider->setRange(-500, 500); // 设置范围
+    slider->setValue(-500);     // 设置初始值
 
 
     // 自定义滑条的大小和颜色
-    slider->setFixedHeight(20); // 设置滑条的高度
+    slider->setFixedHeight(40); // 设置滑条的高度
 
     // 使用样式表设置滑条的颜色
     slider->setStyleSheet(
         "QSlider {"
         "   background: lightgray;"    // 背景颜色，表示未滑过的部分
-        "   border-radius: 10px;"
+        "   border-radius: 5px;"
+       
         "}"
         "QSlider::handle {"
         "   background: white;"         // 滑块颜色
-        "   width: 20px;"              // 滑块宽度
+        "   width: 40px;"              // 滑块宽度
         "   height: 30px;"
-       // "   border-radius: 10px;"      // 滑块圆角
+        "   border-radius: 5px;"      // 滑块圆角
         "}"
         "QSlider::groove:horizontal {"
         "   background: lightgray;"    // 轨道的背景颜色，表示未滑过的部分
+        "   border-radius: 5px;"
         "}"
         "QSlider::sub-page:horizontal {"
         "   background: green;"        // 滑条已滑过部分的颜色
+        "   border-radius: 5px;"
         "}"
         "QSlider::add-page:horizontal {"
         "   background: lightgray;"    // 滑条未滑过部分的颜色
+        "   border-radius: 5px;"
         "}"
     );
 
 
          // 连接信号与槽函数
         QObject::connect(slider, &QSlider::valueChanged, [this](int value) {
-        label->setText(QString::number(value)); // 更新 QLabel 的文本
+        label->setText(QString::number(value+500)); // 更新 QLabel 的文本
+        mozaData.ch = value;
         slider->setStyleSheet(
             QString(
             "QSlider {"
@@ -219,30 +233,35 @@ ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
             "}"
             "QSlider::handle {"
             "   background: white;"         // 滑块颜色
-            "   width: 20px;"              // 滑块宽度
+            "   width: 40px;"              // 滑块宽度
             "height: 30px;"
-            //"   border-radius: 10px;"      // 滑块圆角
+            "   border-radius: 5px;"      // 滑块圆角
             "}"
             "QSlider::groove:horizontal {"
-            "   background: lightgray;"    // 轨道的背景颜色，表示未滑过的部分
+            "background: lightgray;"    // 轨道的背景颜色，表示未滑过的部分
+                "border-radius: 5px;"
             "}"
             "QSlider::sub-page:horizontal {"
             "   background: green;"        // 滑条已滑过部分的颜色
             "   width: %1px;"              // 使用当前值设置已滑过部分的宽度
+            "   border-radius: 5px;"
             "}"
             "QSlider::add-page:horizontal {"
             "   background: lightgray;"    // 滑条未滑过部分的颜色
+            "   border-radius: 5px;"
             "}"
            ) .arg(value * 2)); // 根据滑条的值设置宽度（乘以 2 以适应滑条的宽度）
         });
 
-    hlayout5->addWidget(label);
     hlayout5->addWidget(slider);
+    hlayout5->addWidget(label);
+  
 
     QVBoxLayout* vlayout4 = new QVBoxLayout();
+   
     vlayout4->addLayout(hlayout1);
     vlayout4->addLayout(hlayout5);
-
+   
     setLayout(vlayout4);
 
     // 连接按钮点击事件
