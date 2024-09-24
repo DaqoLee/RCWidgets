@@ -1,0 +1,5 @@
+C:/Users/xh/Desktop/RC/RCWidgets/out/build/CMakeFiles/RCWidgets.dir
+C:/Users/xh/Desktop/RC/RCWidgets/out/build/CMakeFiles/edit_cache.dir
+C:/Users/xh/Desktop/RC/RCWidgets/out/build/CMakeFiles/rebuild_cache.dir
+C:/Users/xh/Desktop/RC/RCWidgets/out/build/CMakeFiles/RCWidgets_autogen_timestamp_deps.dir
+C:/Users/xh/Desktop/RC/RCWidgets/out/build/CMakeFiles/RCWidgets_autogen.dir

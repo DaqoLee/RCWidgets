@@ -1,7 +1,8 @@
 #include "RCWidgets.h"
 
 #include <iostream>
-
+#include <iostream>
+#include <chrono>
 
 #define MAX_ANGLE 180
 #define MAX_BRAKE 32768
@@ -288,9 +289,10 @@ void RCWidgets::parseJsonData(const QString& jsonString) {
         //IPLabel->setText("JSON is not an object");
         return;
     }
+
+    auto start = std::chrono::high_resolution_clock::now();
     // 获取 JSON 对象
     QJsonObject jsonObj = jsonDoc.object();
-
     // 解析各个字段
     QString command = jsonObj.value("Command").toString();
 
