@@ -22,7 +22,7 @@ class ButtonBar : public QWidget {
 public:
     ButtonBar(QWidget* parent = nullptr);
     ~ButtonBar();
-
+    QPushButton* sendButton[6];
 protected:
    
 
@@ -37,7 +37,7 @@ private:
     QComboBox* portSelector;
 
 
-    QPushButton* sendButton[6];
+
 
     QPushButton* connectButton;
 

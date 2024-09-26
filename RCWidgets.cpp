@@ -11,10 +11,14 @@ uint8_t SGP_Gear = 4;
 
 uint8_t Last_SGP_F = 0;
 uint8_t Last_SGP_B = 0;
+uint8_t Last_SGP_S1 = 0;
+uint8_t Last_SGP_S2 = 0;
+uint8_t Last_SGP_S3 = 0;
+
 
 uint8_t butNum[29] = { 19,20,8,7,6,5,22,23,21,34,33,32,24,37,25,38,36,3,1,2,4,35,13,14,113, 114, 115, 116, 117 };
 
-uint8_t tagID[6] = { 0, 1, 2 , 4 , 3, 5};
+uint8_t tagID[6] = { 0, 1, 2 , 3 , 1, 5};
 
 
 
@@ -36,8 +40,8 @@ RCWidgets::RCWidgets(QWidget *parent)
     //    "background-color: rgb(30,30,30);"
     //);
   
-    maxUWBX = 17.8;
-    maxUWBY = 61;
+    maxUWBX = 17.56;
+    maxUWBY = 62.2;
 
     debugTextEdit = new QTextEdit(this);
     debugTextEdit->setReadOnly(true);
@@ -75,23 +79,23 @@ RCWidgets::RCWidgets(QWidget *parent)
     {
     case 30:
 
-        sPort = "COM11";
-        maxAngle = 720;
+        sPort = "COM4";
+        maxAngle = 360;
 
         break;
 
     case 70:
-        sPort = "COM15";
+        sPort = "COM11";
         maxAngle = 360;
         break;
     case 75:
 
-        sPort = "COM15";
+        sPort = "COM12";
         maxAngle = 360;
 
         break;
     case 208:
-        sPort = "COM19";
+        sPort = "COM18";
         maxAngle = 180;
 
         break;
@@ -112,7 +116,7 @@ RCWidgets::RCWidgets(QWidget *parent)
     SpeeedGauge = new Gauge(240, 60, 120, this);
     SpeeedGauge->setGeometry(0, 0, 480, 480);
     SpeeedGauge->utext = QString("km/h");
-    SpeeedGauge->currentValue = 100;
+    SpeeedGauge->currentValue = 0;
 
 
     ChinalGauge = new Gauge(240, 50, 500, this);
@@ -234,11 +238,11 @@ RCWidgets::RCWidgets(QWidget *parent)
 
 
         ERRORCODE err = NORMAL;
-#if 0
+#if 1
         const HIDData* d = moza::getHIDData(err);
         if (d) {
 
-            // mozaData.buttons = 0;
+             //mozaData.buttons = 0;
 
             for (int i = 28; i >= 4; i--)
             {
@@ -247,12 +251,37 @@ RCWidgets::RCWidgets(QWidget *parent)
                  //std::cout << i << ":" << d->buttons[i].isPressed() << " ";
             }
 
-            if (mozaData.SGP_B != Last_SGP_B)
+           // debugTextEdit->append("SGP_B " + QString::number(mozaData.SGP_B));
+          //  if (mozaData.SGP_B != Last_SGP_B)
             {
                 if (mozaData.SGP_B == 1)
                 {
-                    SGP_Gear = SGP_Gear >= 4 ? 4 : SGP_Gear + 1;
+                   Button->sendButton[0]->setStyleSheet("background-color: green; color: white;");
+                   Button->sendButton[0]->setText("1000"); // 更改按钮文本
+                   mozaData.N = 1;
+                    //SGP_Gear = SGP_Gear >= 4 ? 4 : SGP_Gear + 1;
+                    //static bool isClicked = true;
+
+                    //if (isClicked) {
+                    //    Button->sendButton[0]->setStyleSheet("background-color: green; color: white;");
+                    //    Button->sendButton[0]->setText("1000"); // 更改按钮文本
+                    //    mozaData.N = 1;
+                    //}
+                    //else {
+                    //    Button->sendButton[0]->setStyleSheet("background-color: gray; color: white;");
+                    //    Button->sendButton[0]->setText("0"); // 更改按钮文本
+                    //    mozaData.N = 0;
+                    //}
+                    //isClicked = !isClicked;
                 }
+                else
+                {
+                    Button->sendButton[0]->setStyleSheet("background-color: gray; color: white;");
+                    Button->sendButton[0]->setText("0"); // 更改按钮文本
+                    mozaData.N = 0;
+
+                }
+         
 
             }
 
@@ -260,10 +289,30 @@ RCWidgets::RCWidgets(QWidget *parent)
             {
                 if (mozaData.SGP_F == 1)
                 {
-                    SGP_Gear = SGP_Gear <= 0 ? 0 : SGP_Gear - 1;
+                    //SGP_Gear = SGP_Gear <= 0 ? 0 : SGP_Gear - 1;
+
+                    static bool isClicked1 = true;
+
+                    if (isClicked1) {
+                        Button->sendButton[1]->setStyleSheet("background-color: green; color: white;");
+                        Button->sendButton[1]->setText("1000"); // 更改按钮文本
+                        mozaData.WIP = 1;
+                    }
+                    else {
+                        Button->sendButton[1]->setStyleSheet("background-color: gray; color: white;");
+                        Button->sendButton[1]->setText("0"); // 更改按钮文本
+                        mozaData.WIP = 0;
+                    }
+                    isClicked1 = !isClicked1;
                 }
 
             }
+
+
+            Last_SGP_F = mozaData.SGP_F;
+            Last_SGP_B = mozaData.SGP_B;
+            Last_SGP_S1 = mozaData.SGP_S1;
+
 
             //std::cout << SGP_Gear << std::endl;
             //printf("SGP_Gear:%d \r\n", SGP_Gear + 1);
@@ -275,35 +324,54 @@ RCWidgets::RCWidgets(QWidget *parent)
             mozaData.brake = (d->brake + MAX_BRAKE) * 500 / (2 * MAX_BRAKE);
             mozaData.throttle = (d->throttle + MAX_BRAKE) * 50 * gear[SGP_Gear] / (2 * MAX_BRAKE);
 
-            Last_SGP_F = mozaData.SGP_F;
-            Last_SGP_B = mozaData.SGP_B;
 
             ChinalGauge->utext = QString::number(SGP_Gear + 1);
 
-            if (d->throttle > 20)
-            {
-                if ((IMU.speed / 100) > 80)
-                {
-                    SpeeedGauge->currentValue = abs(80 + ((int)IMU.speed % 10));
-                }
-                else
-                {
-                    SpeeedGauge->currentValue = abs(IMU.speed / 100);
-                }
+//
+            //if (mozaData.SGP_B)
+            //{
+            //    static bool isClicked = true;
 
-            }
-            else
-            {
-                if ((IMU.speed / 100) > 60)
-                {
-                    SpeeedGauge->currentValue = abs(60 + ((int)IMU.speed % 10));
-                }
-                else
-                {
-                    SpeeedGauge->currentValue = abs(IMU.speed / 100);
-                }
-                //SpeeedGauge->currentValue = abs(((int)IMU.speed / 100)%60);
-            }
+            //    if (isClicked) {
+            //        Button->sendButton[0]->setStyleSheet("background-color: green; color: white;");
+            //        Button->sendButton[0]->setText("1000"); // 更改按钮文本
+            //        mozaData.N = 1;
+            //    }
+            //    else {
+            //        Button->sendButton[0]->setStyleSheet("background-color: gray; color: white;");
+            //        Button->sendButton[0]->setText("0"); // 更改按钮文本
+            //        mozaData.N = 0;
+            //    }
+            //    isClicked = !isClicked;
+
+            //    //
+            //}
+
+
+            //if (d->throttle > 20)
+            //{
+            //    if ((IMU.speed / 100) > 80)
+            //    {
+            //        SpeeedGauge->currentValue = abs(80 + ((int)IMU.speed % 10));
+            //    }
+            //    else
+            //    {
+            //        SpeeedGauge->currentValue = abs(IMU.speed / 100);
+            //    }
+
+            //}
+            //else
+            //{
+            //    if ((IMU.speed / 100) > 60)
+            //    {
+            //        SpeeedGauge->currentValue = abs(60 + ((int)IMU.speed % 10));
+            //    }
+            //    else
+            //    {
+            //        SpeeedGauge->currentValue = abs(IMU.speed / 100);
+            //    }
+            //    //SpeeedGauge->currentValue = abs(((int)IMU.speed / 100)%60);
+            //}
 
             if (mozaData.brake > 20)
             {
@@ -317,13 +385,18 @@ RCWidgets::RCWidgets(QWidget *parent)
 
             Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
 
+
+            mozaData.SGP_B = 0;
+            mozaData.SGP_F = 0;
+           // mozaData.buttons = 0;
+
         }
         else
         {
             debugTextEdit->append("getHIDData err" + QString::number(err));
         }
 #endif
-        Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
+       // Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
 
         update();
 
@@ -418,6 +491,9 @@ void RCWidgets::mouseMoveEvent(QMouseEvent* event)
 }
 
 
+double time_now, time_end;
+double xp = 0.0, yp = 0.0, xp_last = 0.0, yp_last = 0.0;
+
 
 void RCWidgets::parseJsonData(const QString& jsonString) {
     // 将 JSON 字符串转换为 QJsonDocument
@@ -445,9 +521,34 @@ void RCWidgets::parseJsonData(const QString& jsonString) {
    
     int ID = jsonObj.value("TagID").toInt();
 
-    Map->Tag[tagID[ID]].imageX = Map->width() +(jsonObj.value("X").toDouble() * (Map->width()/maxUWBX));
-    Map->Tag[tagID[ID]].imageY = Map->height() - (jsonObj.value("Y").toDouble() * (Map->height()/maxUWBY));
+    Map->Tag[tagID[ID]].imageX = Map->width() +(jsonObj.value("X").toDouble() * ((float)(Map->width() + 0.5f)/maxUWBX));
+    Map->Tag[tagID[ID]].imageY = Map->height() - (jsonObj.value("Y").toDouble() * ((float)(Map->height() + 0.5f)/maxUWBY));
  //   Map->Tag[tagID[ID]].imageZ = jsonObj.value("Z").toDouble();
+
+    if (ID == 4) {
+
+        time_now = clock();
+
+        xp = jsonObj.value("X").toDouble(), yp = jsonObj.value("Y").toDouble();
+
+        if (time_now != time_end) {
+            double speed = sqrt((xp - xp_last) * (xp - xp_last) + (yp - yp_last) * (yp - yp_last)) / (time_now - time_end);
+            if (speed * 1000 * 3.6 < 80 && (abs(IMU.AccelZ) > 0.1)) {
+                SpeeedGauge->currentValue = speed * 1000 * 3.6;
+            }
+
+        }
+
+
+        debugTextEdit->append(QString::number(time_now - time_end) + ":" + QString::number(ID) + ":" + QString::number(xp) + "," + QString::number(yp) + ":" + QString::number(xp - xp_last) + "," + QString::number(yp - yp_last));
+
+        xp_last = xp;
+        yp_last = yp;
+
+
+        time_end = clock();
+
+    }
 
     //UWB[tagID].x = jsonObj.value("X").toDouble();
     //UWB[tagID].y = jsonObj.value("Y").toDouble();
