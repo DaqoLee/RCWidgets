@@ -42,6 +42,25 @@ ButtonBar::ButtonBar(QWidget* parent) : QWidget(parent) {
        
     }
 
+      QObject::connect(sendButton[0], &QPushButton::clicked, [=]() {
+
+        static bool isClicked = true;
+        
+        if (isClicked) {
+            sendButton[0]->setStyleSheet("background-color: green; color: white;");
+            sendButton[0]->setText("1000"); // 更改按钮文本
+            mozaData.N = 1;
+        }
+        else {
+            sendButton[0]->setStyleSheet("background-color: gray; color: white;");
+            sendButton[0]->setText("0"); // 更改按钮文本
+            mozaData.N = 0;
+        }
+        isClicked = !isClicked;
+
+        
+        });
+
 
     QObject::connect(sendButton[0], &QPushButton::clicked, [=]() {
 
