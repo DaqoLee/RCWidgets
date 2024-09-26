@@ -1,5 +1,6 @@
 #include "RCWidgets.h"
 
+
 #include <iostream>
 #include <iostream>
 #include <chrono>
@@ -19,108 +20,100 @@ uint8_t butNum[29] = { 19,20,8,7,6,5,22,23,21,34,33,32,24,37,25,38,36,3,1,2,4,35
 
 uint8_t tagID[6] = { 0, 1, 2 , 4 , 3, 5};
 
-typedef struct
-{
-    union
-    {
-        uint8_t Data[16];
-        struct
-        {
-            float fSteeringWheelAngle;
-            int brake;
-            int throttle;
-            union
-            {
-                uint32_t buttons;
-                struct
-                {
-                    uint32_t N : 1;
-                    uint32_t WIP : 1;
-                    uint32_t L : 1;
-                    uint32_t D : 1;
-                    uint32_t Ri : 1;
-                    uint32_t U : 1;
-                    uint32_t CAM : 1;
-                    uint32_t RADIO : 1;
-                    uint32_t FL : 1;
-                    uint32_t PL : 1;
-                    uint32_t BOX : 1;
-                    uint32_t P : 1;
-                    uint32_t S1 : 1;
-                    uint32_t S2 : 1;
-                    uint32_t HOME : 1;
-                    uint32_t MENU : 1;
-                    uint32_t START : 1;
-                    uint32_t X : 1;
-                    uint32_t A : 1;
-                    uint32_t B : 1;
-                    uint32_t Y : 1;
-                    uint32_t R : 1;
-                    uint32_t LG : 1;
-                    uint32_t RG : 1;
-                    uint32_t SGP_F : 1;
-                    uint32_t SGP_B : 1;
-                    uint32_t SGP_S1 : 1;
-                    uint32_t SGP_S2 : 1;
-                    uint32_t SGP_S3 : 1;
-
-                    uint32_t Other : 3;
-                    /* data */
-                };
-
-            };
-        };
-
-    };
-}MOZA_t;
-
-MOZA_t mazaData;
 
 
 
-typedef struct
-{
-    union
-    {
-        uint8_t imuData[20];
-        struct
-        {
-
-            // float AccelX;
-            // float AccelY;
-            float AccelZ;
-
-            // float GyroX;
-            // float GyroY;
-            float GyroZ;
-
-            float roll;
-            float pitch;
-            //  float yaw;
-
-            float speed;
-        };
-
-    };
-}IMU_t;
+MOZA_t mozaData;
 
 IMU_t IMU;
+
 
 
 RCWidgets::RCWidgets(QWidget *parent)
     : QMainWindow(parent)
 {
     //setWindowFlags(Qt::FramelessWindowHint);
-
+    loadSettings();
     ui.setupUi(this);
 
     //this->setStyleSheet(
     //    "background-color: rgb(30,30,30);"
     //);
   
+    maxUWBX = 17.8;
+    maxUWBY = 61;
+
+    debugTextEdit = new QTextEdit(this);
+    debugTextEdit->setReadOnly(true);
+    debugTextEdit->setGeometry(240, 1755, 230, 100);
 
 
-    SpeeedGauge = new Gauge(240, 60, 240, this);
+    QString myIPAdress = getLocalIP();
+    debugTextEdit->append(myIPAdress + ":12345");
+
+    QStringList ipParts = myIPAdress.split('.');
+    int lastNumber = 0;
+
+    // 检查分割结果是否有效
+    if (ipParts.size() == 4) { // 确保是一个有效的 IPv4 地址
+        // 获取最后一部分并转换为数字
+        bool ok;
+        lastNumber = ipParts.last().toInt(&ok); // toInt 方法可以返回一个布尔值表示转换是否成功
+
+        if (ok) { // 如果转换成功
+
+            debugTextEdit->append( "IP lastNumber:" + QString::number(lastNumber));
+        }
+        else {
+            debugTextEdit->append("err");
+        }
+    }
+    else {
+        debugTextEdit->append("NO IPAdress！");
+    }
+
+    QString sPort;
+    int maxAngle;
+
+    switch (lastNumber)
+    {
+    case 30:
+
+        sPort = "COM11";
+        maxAngle = 720;
+
+        break;
+
+    case 70:
+        sPort = "COM15";
+        maxAngle = 360;
+        break;
+    case 75:
+
+        sPort = "COM15";
+        maxAngle = 360;
+
+        break;
+    case 208:
+        sPort = "COM19";
+        maxAngle = 180;
+
+        break;
+
+    case 13:
+        sPort = "COM4";
+        maxAngle = 180;
+
+        break;
+
+    default:
+
+        sPort = "COM11";
+        maxAngle = 360;
+        break;
+    }
+
+    SpeeedGauge = new Gauge(240, 60, 120, this);
     SpeeedGauge->setGeometry(0, 0, 480, 480);
     SpeeedGauge->utext = QString("km/h");
     SpeeedGauge->currentValue = 100;
@@ -132,27 +125,105 @@ RCWidgets::RCWidgets(QWidget *parent)
     ChinalGauge->setGeometry(0, 480, 480, 480);
 
     Button = new ButtonBar(this);
-    Button->setGeometry(0, 1400, 480, 300);
+    Button->setGeometry(0, 1300, 480, 300);
 
     Map = new RCMap(this);
-    Map->setGeometry(480, 0, 600, 1960);
+    Map->setGeometry(480, 0, 600, 1920);
 
    
+    Serial = new SerialPort(this, sPort);
+    Serial->setGeometry(0, 1650, 240, 240);
   
     moza::installMozaSDK();
     Sleep(5000);
-    ERRORCODE err = NORMAL;
-    err = moza::setMotorLimitAngle(MAX_ANGLE, MAX_ANGLE);
 
+
+    //debugTextEdit->setStyleSheet("background-color: green; color: white;");
+
+    angleSelector = new QComboBox(this);
+    angleSelector->setGeometry(370, 1685, 100, 40);
+    
+    angleSelector->addItem(QString::number(90));
+    angleSelector->addItem(QString::number(180));
+    angleSelector->addItem(QString::number(360));
+    angleSelector->addItem(QString::number(720));
+   
+
+    angleSelector->setCurrentText(QString::number(maxAngle));
+
+    setButton = new QPushButton("Steering Angle", this);
+    setButton->setGeometry(240, 1685, 120, 40);
 
 
     udpSocketUWB = new QUdpSocket(this);
-    udpSocketUWB->bind(QHostAddress("192.168.31.70"), 12345); // 绑定到任意地址和端口12345
+    udpSocketUWB->bind(QHostAddress(myIPAdress), 12345); // 绑定到任意地址和端口12345  //192.168.50.30
     connect(udpSocketUWB, &QUdpSocket::readyRead, this, &RCWidgets::processPendingDatagramsUWB);
+
     timer = new QTimer(this);
 
-    Serial = new SerialPort(this);
-    Serial->setGeometry(0, 1740, 240, 240);
+
+    //QSpinBox* spinBox = new QSpinBox(this);
+
+    //spinBox->setRange(0, 100); // 设置范围
+    //spinBox->setValue(50); // 设置初始值
+
+    //spinBox->setGeometry(240, 1585, 120, 40);
+
+    ERRORCODE err = NORMAL;
+    err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());
+    if (err)
+    {
+        debugTextEdit->append("setMotorLimitAngle " + angleSelector->currentText() + " err:" + QString::number(err));
+        setButton->setStyleSheet("background-color: red; color: white;");
+    }
+    else
+    {
+        debugTextEdit->append("setMotorLimitAngle " + angleSelector->currentText());
+        setButton->setStyleSheet("background-color: green; color: white;");
+    }
+   
+
+
+    QObject::connect(angleSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        [&](int index) {
+
+            ERRORCODE err = NORMAL;
+            err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());
+            if (err)
+            {
+                debugTextEdit->append("setMotorLimitAngle " + angleSelector->currentText() + " err:" + QString::number(err));
+                setButton->setStyleSheet("background-color: red; color: white;");
+            }
+            else
+            {
+                debugTextEdit->append("setMotorLimitAngle " + angleSelector->currentText());
+                setButton->setStyleSheet("background-color: green; color: white;");
+            }
+
+        });
+
+
+
+  //  debugTextEdit->append(QString::number(Map->width()) +"    " + QString::number(Map->height()));
+
+   // setButton->setStyleSheet("background-color: green; color: white;");
+
+    connect(setButton, &QPushButton::clicked, [=]() {
+        
+        
+        ERRORCODE err = NORMAL;
+        err = moza::setMotorLimitAngle(angleSelector->currentText().toInt(), angleSelector->currentText().toInt());
+        if (err)
+        {
+            debugTextEdit->append("setMotorLimitAngle " + angleSelector->currentText() + " err:" + QString::number(err));
+            setButton->setStyleSheet("background-color: red; color: white;");
+        }
+        else
+        {
+            debugTextEdit->append("setMotorLimitAngle " + angleSelector->currentText());
+            setButton->setStyleSheet("background-color: green; color: white;");
+        }
+        });
 
 
     //IPLabel = new QLabel(this);
@@ -162,41 +233,36 @@ RCWidgets::RCWidgets(QWidget *parent)
     //IPLabel->setStyleSheet("background-color: green;");
 
 
-    //while (Serial->isOpen())
-    //{
-    //    Sleep(100);
-    //}
 
-
-
-    connect(timer, &QTimer::timeout, [=]() {
+    connect(timer, &QTimer::timeout, [=]()mutable {
 
 
         ERRORCODE err = NORMAL;
+#if 1
         const HIDData* d = moza::getHIDData(err);
         if (d) {
 
-            // mazaData.buttons = 0;
+            // mozaData.buttons = 0;
 
-            for (int i = 28; i >= 0; i--)
+            for (int i = 28; i >= 4; i--)
             {
 
-                // mazaData.buttons |= (d->buttons[butNum[i]].isPressed() << (i));
+                 mozaData.buttons |= (d->buttons[butNum[i]].isPressed() << (i));
                  //std::cout << i << ":" << d->buttons[i].isPressed() << " ";
             }
 
-            if (mazaData.SGP_B != Last_SGP_B)
+            if (mozaData.SGP_B != Last_SGP_B)
             {
-                if (mazaData.SGP_B == 1)
+                if (mozaData.SGP_B == 1)
                 {
                     SGP_Gear = SGP_Gear >= 4 ? 4 : SGP_Gear + 1;
                 }
 
             }
 
-            if (mazaData.SGP_F != Last_SGP_F)
+            if (mozaData.SGP_F != Last_SGP_F)
             {
-                if (mazaData.SGP_F == 1)
+                if (mozaData.SGP_F == 1)
                 {
                     SGP_Gear = SGP_Gear <= 0 ? 0 : SGP_Gear - 1;
                 }
@@ -205,24 +271,47 @@ RCWidgets::RCWidgets(QWidget *parent)
 
             //std::cout << SGP_Gear << std::endl;
             //printf("SGP_Gear:%d \r\n", SGP_Gear + 1);
-            if (d->fSteeringWheelAngle >= -(MAX_ANGLE / 2) && d->fSteeringWheelAngle <= (MAX_ANGLE / 2))
+            if (d->fSteeringWheelAngle >= -(angleSelector->currentText().toInt() / 2) && d->fSteeringWheelAngle <= (angleSelector->currentText().toInt() / 2))
             {
-                mazaData.fSteeringWheelAngle = d->fSteeringWheelAngle * 500 / (MAX_ANGLE / 2);
+                mozaData.fSteeringWheelAngle = d->fSteeringWheelAngle * 500 / (angleSelector->currentText().toInt() / 2);
             }
 
-            mazaData.brake = (d->brake + MAX_BRAKE) * 500 / (2 * MAX_BRAKE);
-            mazaData.throttle = (d->throttle + MAX_BRAKE) * 50 * gear[SGP_Gear] / (2 * MAX_BRAKE);
+            mozaData.brake = (d->brake + MAX_BRAKE) * 500 / (2 * MAX_BRAKE);
+            mozaData.throttle = (d->throttle + MAX_BRAKE) * 50 * gear[SGP_Gear] / (2 * MAX_BRAKE);
 
-            Last_SGP_F = mazaData.SGP_F;
-            Last_SGP_B = mazaData.SGP_B;
+            Last_SGP_F = mozaData.SGP_F;
+            Last_SGP_B = mozaData.SGP_B;
 
-            Serial->sendData((char*)mazaData.Data, 16);
+            ChinalGauge->utext = QString::number(SGP_Gear + 1);
 
-           // serialPort->write((char*)mazaData.Data, 16);
-
-            if (mazaData.brake > 20)
+            if (d->throttle > 20)
             {
-                ChinalGauge->currentValue = mazaData.brake;
+                if ((IMU.speed / 100) > 80)
+                {
+                    SpeeedGauge->currentValue = abs(80 + ((int)IMU.speed % 10));
+                }
+                else
+                {
+                    SpeeedGauge->currentValue = abs(IMU.speed / 100);
+                }
+
+            }
+            else
+            {
+                if ((IMU.speed / 100) > 60)
+                {
+                    SpeeedGauge->currentValue = abs(60 + ((int)IMU.speed % 10));
+                }
+                else
+                {
+                    SpeeedGauge->currentValue = abs(IMU.speed / 100);
+                }
+                //SpeeedGauge->currentValue = abs(((int)IMU.speed / 100)%60);
+            }
+
+            if (mozaData.brake > 20)
+            {
+                ChinalGauge->currentValue = mozaData.brake;
             }
             else
             {
@@ -230,8 +319,19 @@ RCWidgets::RCWidgets(QWidget *parent)
 
             }
 
+            Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
+
         }
-        SpeeedGauge->currentValue = abs(IMU.speed / 100);
+        else
+        {
+            debugTextEdit->append("getHIDData err" + QString::number(err));
+        }
+
+
+#else
+        Serial->sendData((char*)mozaData.Data, sizeof(mozaData.Data));
+#endif
+        
 
         update();
 
@@ -242,34 +342,88 @@ RCWidgets::RCWidgets(QWidget *parent)
 }
 
 RCWidgets::~RCWidgets(){
-
+    saveSettings();
 }
 
+
+
 QString RCWidgets::getLocalIP() {
-    QString ipAddress;
+    QString ipAddress;  // 初始化一个空的字符串，用于存储找到的IP地址
 
-    //const QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+    // 获取系统中所有网络接口
+    const QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
 
-    //for (const QNetworkInterface& interface : interfaces) {
-    //    if (interface.flags().testFlag(QNetworkInterface::IsUp) &&
-    //        !interface.flags().testFlag(QNetworkInterface::IsLoopBack)) {
+    // 遍历每个网络接口
+    for (const QNetworkInterface& netInterface : interfaces) { // 将 interface 改为 netInterface
+        // 检查接口是否处于活动状态且不是环回接口
+        if (netInterface.flags().testFlag(QNetworkInterface::IsUp) &&  // 检查接口是否为“活动”状态
+            !netInterface.flags().testFlag(QNetworkInterface::IsLoopBack)) { // 检查接口是否为环回接口（如localhost）
 
-    //        const QList<QNetworkAddressEntry> entries = interface.addressEntries();
-    //        for (const QNetworkAddressEntry& entry : entries) {
-    //            if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol) {
-    //                ipAddress = entry.ip().toString();
-    //                break;
-    //            }
-    //        }
-    //    }
-    //    if (!ipAddress.isEmpty()) {
-    //        break;
-    //    }
-    //}
+            // 获取接口的地址条目（IPv4 或 IPv6 地址）
+            const QList<QNetworkAddressEntry> entries = netInterface.addressEntries();
+            // 遍历接口的所有地址条目
+            for (const QNetworkAddressEntry& entry : entries) {
+                // 检查是否是有效的 IPv4 地址，并且不是空地址
+                if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol && // 检查地址协议是否为IPv4
+                    entry.ip() != QHostAddress::Null && // 确保地址不是空地址
+                    entry.ip() != QHostAddress::Any) { // 确保地址不是“任何地址”
 
+                    ipAddress = entry.ip().toString(); // 将找到的IPv4地址转换为字符串
+                    break; // 找到第一个有效的IPv4地址后退出内层循环
+                }
+            }
+        }
+        // 如果已找到IP地址，则退出外层循环
+        if (!ipAddress.isEmpty()) {
+            break; // 找到IP后退出外部循环
+        }
+    }
+
+    // 如果未找到IP地址，返回默认消息；否则返回找到的IP地址
     return ipAddress.isEmpty() ? "No IP Address found" : ipAddress;
 }
 
+
+
+void RCWidgets::loadSettings() {
+    QSettings settings("MyCompany", "MyApp");
+
+    // 恢复窗口大小和位置
+    resize(settings.value("windowSize", QSize(800, 600)).toSize());
+    move(settings.value("windowPos", QPoint(100, 100)).toPoint());
+}
+
+void RCWidgets::saveSettings() {
+    QSettings settings("MyCompany", "MyApp");
+
+    // 保存窗口大小和位置
+    settings.setValue("windowSize", size());
+    settings.setValue("windowPos", pos());
+}
+
+// 重写 resizeEvent 以保存窗口大小
+void RCWidgets::resizeEvent(QResizeEvent* event)  {
+    QMainWindow::resizeEvent(event);
+    saveSettings(); // 自动保存大小
+}
+
+// 重写 moveEvent 以保存窗口位置
+void RCWidgets::moveEvent(QMoveEvent* event)  {
+    QMainWindow::moveEvent(event);
+    saveSettings(); // 自动保存位置
+}
+
+void RCWidgets::mousePressEvent(QMouseEvent* event)
+{
+    //this->windowPos = this->pos();       // 获得部件当前位置
+    //this->mousePos = event->globalPos(); // 获得鼠标位置
+    //this->dPos = mousePos - windowPos;   // 移动后部件所在的位置
+}
+
+void RCWidgets::mouseMoveEvent(QMouseEvent* event)
+{
+  //  this->move(event->globalPos() - this->dPos);
+}
 
 
 
@@ -300,8 +454,8 @@ void RCWidgets::parseJsonData(const QString& jsonString) {
    
     int ID = jsonObj.value("TagID").toInt();
 
-    Map->Tag[tagID[ID]].imageX = jsonObj.value("X").toDouble() * 30;
-    Map->Tag[tagID[ID]].imageY = jsonObj.value("Y").toDouble() * 40;
+    Map->Tag[tagID[ID]].imageX = Map->width() +(jsonObj.value("X").toDouble() * (Map->width()/maxUWBX));
+    Map->Tag[tagID[ID]].imageY = Map->height() - (jsonObj.value("Y").toDouble() * (Map->height()/maxUWBY));
  //   Map->Tag[tagID[ID]].imageZ = jsonObj.value("Z").toDouble();
 
     //UWB[tagID].x = jsonObj.value("X").toDouble();
@@ -337,7 +491,7 @@ void RCWidgets::processPendingDatagramsUWB() {
 
         if (datagram.size() == 22)
         {
-         //   udpSocketUWB->readDatagram((char*)IMU.imuData, 20, &sender, &senderPort);
+            udpSocketUWB->readDatagram((char*)IMU.imuData, 20, &sender, &senderPort);
         }
         else
         {

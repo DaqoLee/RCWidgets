@@ -42,18 +42,20 @@ private:
     QPushButton* connectButton;
 
     QPushButton* sendButton1;
-
-    QTextEdit* TextEdit1;
-    QTextEdit* TextEdit2;
+    QLabel* TextEdit1;
+    QLabel* TextEdit2;
 
     QPushButton* sendButton2;
-    QTextEdit* TextEdit3;
-    QTextEdit* TextEdit4;
+    QLabel* TextEdit3;
+    QLabel* TextEdit4;
+
+    QPushButton* sendButton3;
+    QLabel* TextEdit5;
+    QLabel* TextEdit6;
 
 
-    QTextEdit* TextEdit5;
-    QTextEdit* TextEdit6;
-
+    QSlider* slider;
+    QLabel* label;
 
     QSerialPort serialPort;
 };

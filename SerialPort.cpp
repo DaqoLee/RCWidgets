@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 
 
-SerialPort::SerialPort(QWidget* parent ) : QWidget(parent) {
+SerialPort::SerialPort(QWidget* parent ,QString _port) : QWidget(parent) {
     setWindowTitle("Serial Port Manager");
 
  
@@ -11,7 +11,8 @@ SerialPort::SerialPort(QWidget* parent ) : QWidget(parent) {
     portSelector = new QComboBox();
     portSelector->setFixedSize(100, 40);
     refreshPorts(); // 初始化时刷新端口列表
-
+    portSelector->setCurrentText(_port);
+    //portSelector->addItem("COM12");
     // 创建连接/断开按钮
     connectButton = new QPushButton("Connect");
     connectButton->setFixedSize(100, 40);
@@ -48,6 +49,29 @@ SerialPort::SerialPort(QWidget* parent ) : QWidget(parent) {
 
     setLayout(vlayout);
 
+
+    QString portName = portSelector->currentText();
+    serialPort.setPortName(portName);
+    serialPort.setBaudRate(QSerialPort::Baud115200); // 设置波特率
+    serialPort.setDataBits(QSerialPort::Data8);
+    serialPort.setParity(QSerialPort::NoParity);
+    serialPort.setStopBits(QSerialPort::OneStop);
+    serialPort.setFlowControl(QSerialPort::NoFlowControl);
+
+    if (serialPort.open(QIODevice::ReadWrite)) {
+        setConnectButtonStyle(true); // 设置为连接样式
+        connectButton->setText("Disconnect"); // 更改按钮文本
+        sendButton->setEnabled(true); // 启用发送按钮
+        // QMessageBox::information(this, "Connection", "Connected to " + portName);
+        // connect(&serialPort, &QSerialPort::readyRead, this, &SerialPort::readData); // 连接读数据信号
+       // receiveTextEdit->clear();
+
+    }
+    else {
+        QMessageBox::warning(this, "Connection Error", "Failed to connect to " + portName);
+    }
+
+
     // 连接按钮点击事件
     connect(connectButton, &QPushButton::clicked, this, &SerialPort::toggleConnection);
     //// 发送按钮点击事件
@@ -83,9 +107,6 @@ void SerialPort::toggleConnection() {
         serialPort.setStopBits(QSerialPort::OneStop);
         serialPort.setFlowControl(QSerialPort::NoFlowControl);
 
-
-
-
         if (serialPort.open(QIODevice::ReadWrite)) {
             setConnectButtonStyle(true); // 设置为连接样式
             connectButton->setText("Disconnect"); // 更改按钮文本
@@ -110,7 +131,7 @@ void SerialPort::sendData(char *data, int len) {
     }
     else
     {
-        receiveTextEdit->append("Please connect serial!!!");
+      //  receiveTextEdit->append("Please connect serial!!!");
     }
 }
 
@@ -139,6 +160,7 @@ void SerialPort::readData() {
 void SerialPort::refreshPorts() {
     portSelector->clear(); // 清空现有的端口列表
     const auto ports = QSerialPortInfo::availablePorts(); // 获取可用串口
+   // portSelector->addItem("COM4");
     for (const QSerialPortInfo& info : ports) {
         portSelector->addItem(info.portName()); // 添加可用串口到选择框
     }

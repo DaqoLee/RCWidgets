@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     RCWidgets RC;
-    RC.resize(1080, 1960);
+    RC.resize(1080, 1920);
 
 
 
